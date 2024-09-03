@@ -1,0 +1,73 @@
+import math
+from collections import Counter
+
+class DataSet:
+    def __init__(self, ds):
+        self.dataset = ds
+
+    def uniqueAns(self):
+        return len(set(self.dataset["Ans"]))
+
+    def getMaxOccur(self):
+        counter = Counter(self.dataset["Ans"])
+        most_common = counter.most_common(2)
+        return most_common[0][0] if len(most_common) == 1 or most_common[0][1] > most_common[1][1] else None
+
+    def copy(self):
+        return DataSet({k: v.copy() for k, v in self.dataset.items()})
+
+    def maxInfoGain(self):
+        return max(self.dataset["Features"], key=self.infoGain) if self.dataset["Features"] else None
+
+    def infoGain(self, feat):
+        if feat not in self.dataset:
+            return None
+        total = len(self.dataset[feat])
+        branches = self.splitOnFeature(feat)
+        weighted_entropy = sum(
+            (len(branch.dataset["Ans"]) / total) * branch.getEntropy()
+            for branch in branches.values()
+        )
+        return self.getEntropy() - weighted_entropy
+
+    def getEntropy(self):
+        total = len(self.dataset["Ans"])
+        counter = Counter(self.dataset["Ans"])
+        return -sum((count / total) * math.log(count / total, 2) for count in counter.values())
+
+    def splitOnFeature(self, feat):
+        feature_values = self.dataset[feat]
+        branches = {}
+        for value in set(feature_values):
+            subset = {
+                k: [v[i] for i in range(len(v)) if feature_values[i] == value]
+                for k, v in self.dataset.items() if k != feat
+            }
+            subset["Features"] = [f for f in self.dataset["Features"] if f != feat]
+            branches[value] = DataSet(subset)
+        return branches
+
+def calculateAns(dsobj, feature, maxoccur, descr=""):
+    branches = dsobj.splitOnFeature(feature)
+    for value, branch in branches.items():
+        if branch.uniqueAns() == 1:
+            print(f"Answer for {descr}-{feature} with value = {value} is: {branch.dataset['Ans'][0]}")
+        elif not branch.dataset["Features"]:
+            print(f"Answer for {descr}-{feature} with value = {value} is: {maxoccur}")
+        else:
+            newfeat = branch.maxInfoGain()
+            newmaxoccur = branch.getMaxOccur() or maxoccur
+            calculateAns(branch, newfeat, newmaxoccur, f"{descr}:{feature}:->{value} ")
+
+dataset = {
+    "Ans": ["Wait", "Wait", "Leave", "Wait", "Wait", "Wait", "Leave", "Leave", "Wait", "Leave"],
+    "Features": ["Reservation", "Raining", "BadService"],
+    "Reservation": ["T", "T", "T", "F", "T", "T", "T", "T", "T", "F"],
+    "Raining": ["T", "F", "T", "T", "T", "T", "F", "T", "T", "F"],
+    "BadService": ["F", "F", "T", "F", "F", "F", "T", "T", "F", "F"]
+}
+
+d1 = DataSet(dataset)
+if d1.uniqueAns() != 1:
+    feat = d1.maxInfoGain()
+    calculateAns(d1, feat, d1.getMaxOccur())
