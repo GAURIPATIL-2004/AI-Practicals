@@ -1,0 +1,45 @@
+class NaiveBayes:
+    def __init__(self, features, response):
+        self.features = features
+        self.response = response
+
+    def predict(self, custcase):
+        anskeys = list(self.response.keys())
+        ansvalues = dict.fromkeys(anskeys, 1)
+
+        # Calculate the posterior probability for each response category
+        for key in anskeys:
+            ansvalues[key] = self.response[key]
+            for feature, value in custcase.items():
+                ansvalues[key] *= self.features[feature][value][key]
+
+        print("Posterior probabilities:", ansvalues)
+
+        # Find the response category with the highest probability
+        maxkey = max(ansvalues, key=ansvalues.get)
+        return maxkey
+
+# Precalculated values from the Naive Bayes classifier
+response = {"Wait": 0.4, "Leave": 0.6}
+
+features = {
+    "Reservation": {
+        "Yes": {"Wait": 0.5, "Leave": 0.666667},
+        "No": {"Wait": 0.5, "Leave": 0.333333}
+    },
+    "Time>30": {
+        "Yes": {"Wait": 0.25, "Leave": 0.83333},
+        "No": {"Wait": 0.75, "Leave": 0.16667}
+    }
+}
+
+nb = NaiveBayes(features, response)
+
+# User inputs
+resstatus = input("Manager asks Customer, have you reserved the table? (Yes/No): ")
+timestatus = input("Customer asks Manager, will it take more than 30 mins? (Yes/No): ")
+
+custcase = {"Reservation": resstatus, "Time>30": timestatus}
+
+# Predict the response
+print("Manager predicts that Customer will:", nb.predict(custcase))
