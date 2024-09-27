@@ -1,5 +1,6 @@
 # AI-Practicals
 
+"Artificial Intelligence is the simulation of human intelligence processes by machines, especially computer systems. These processes include learning (the acquisition of information and rules for using it), reasoning (using rules to reach approximate or definite conclusions), and self-correction."
 
 ## Table of Contents
 1. [Implement Breadth First Search (BFS) Algorithm](#1-implement-breadth-first-search-bfs-algorithm)
